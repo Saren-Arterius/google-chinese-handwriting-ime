@@ -1,9 +1,14 @@
 /* globals document, $, setInterval, ctr */
 
-const {exec, execFile} = require('mz/child_process');
+const {exec, execFile, spawn} = require('mz/child_process');
 
 const UI_POLL_INTERVAL_MS = 50;
 const SHOULD_USE_CLIPBOARD = process.env.DESKTOP_SESSION.startsWith('gnome');
+
+let helper;
+if (SHOULD_USE_CLIPBOARD) {
+  helper = spawn('python3', ['gnome-helper.py']);
+}
 let thisWindowID;
 let lastWindowID;
 let windowWidth;
@@ -33,8 +38,8 @@ const main = async () => {
   thisWindowID = await getNumberOutput('xdotool search "Google Chinese Handwriting IME"');
   $('.ita-hwt-backspace').click(async () => {
     await focusLastWindow();
-    if (SHOULD_USE_CLIPBOARD) {
-      await execFile('python3', ['gnome-helper.py', '!', 'bs']);
+    if (helper) {
+      helper.stdin.write('bs!!\n');
     } else {
       await exec('xdotool key BackSpace');
     }
@@ -48,8 +53,8 @@ const main = async () => {
     if (val.length > 0) {
       $('#source').val('');
       await focusLastWindow();
-      if (SHOULD_USE_CLIPBOARD) {
-        await execFile('python3', ['gnome-helper.py', val]);
+      if (helper) {
+        helper.stdin.write(`${val}\n`);
       } else {
         await execFile('xdotool', ['type', val]);
       }

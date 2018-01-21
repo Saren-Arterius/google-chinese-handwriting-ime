@@ -4,7 +4,7 @@ from sys import argv
 import pyperclip
 import ctypes
 X11 = ctypes.CDLL("libX11.so")
-CLIPBOARD_WAIT_DELAY = 2
+CLIPBOARD_WAIT_DELAY = 0.2
 
 class Display(ctypes.Structure):
     """ opaque struct """
@@ -72,7 +72,9 @@ def type_char(char):
         pyperclip.copy(was)
 
 if __name__ == '__main__':
-    if argv[1] == '!' and argv[2] == 'bs':
-        linux_backspace()
-    else:
-        type_char(argv[1])
+    while True:
+        data = input()
+        if data == 'bs!!':
+            linux_backspace()
+        else:
+            type_char(data)
