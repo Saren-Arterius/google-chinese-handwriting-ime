@@ -1,0 +1,57 @@
+{
+  "plugins": [
+    "node"
+  ],
+  "extends": ["eslint:recommended", "plugin:node/recommended", "airbnb"],
+  "rules": {
+      "node/no-unsupported-features": 0,
+      "no-unused-expressions": 0,
+      "strict": 0,
+      "jsx-a11y/img-has-alt": 0,
+      "import/prefer-default-export": 0,
+      "class-methods-use-this": 0,
+      "react/sort-comp": 0,
+      "arrow-body-style": 0,
+      "no-plusplus": 0,
+      "new-cap": 0,
+      "no-undef": "error",
+      "no-console": 0,
+      "node/no-extraneous-require": 0,
+      "no-process-exit": 0,
+      "indent": ["error", 2, {
+        "SwitchCase": 1
+      }],
+      "semi": [2, "always"],
+      "space-before-function-paren": ["error", {
+        "anonymous": "always",
+        "named": "always",
+        "asyncArrow": "always"
+      }],
+      "no-mixed-spaces-and-tabs": "error",
+      "no-restricted-globals": "off",
+      "consistent-return": "error",
+      "no-unused-vars": ["error", {"args": "none"}],
+      "no-trailing-spaces": "error",
+      "comma-dangle": ["error", "never"],
+      "eol-last": "error",
+      "arrow-spacing": "error",
+      "no-param-reassign": "warn",
+      "max-len": "off",
+      "prefer-const": "off",
+      "no-underscore-dangle": "warn",
+      "global-require": "off",
+      "import/no-dynamic-require": "off",
+      "no-throw-literal": "off",
+      "no-alert": "off",
+      "no-continue": "off",
+      "func-names": "off",
+      "no-await-in-loop": "off",
+      "node/shebang": "off",
+      "object-curly-spacing": ["error", "never"],
+      "newline-per-chained-call": "off",
+  },
+  "globals": {
+    "describe": true,
+    "it": true
+  }
+}

@@ -1,19 +1,17 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <title>Hello World!</title>
+    <title>Google Chinese Handwriting IME</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
   </head>
-  <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
-
+  <body style="overflow:hidden;">
+    <webview id="webview" preload="./renderer.js" src="https://translate.google.com.hk/?hl=zh-TW#zh-CN/zh-TW" style="position:absolute;width:100%;height:100%;"></webview>
     <script>
-      // You can also require other files to run in this process
-      require('./renderer.js')
     </script>
   </body>
 </html>
