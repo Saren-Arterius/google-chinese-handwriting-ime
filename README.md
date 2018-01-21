@@ -12,7 +12,7 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 2. `npm start`
 
 # Screenshot
-![https://drop.wtako.net/file/82b27c79a2f1c858dc62ecbd7fd605a5a9259101.png](Screenshot)
+![Screenshot](https://drop.wtako.net/file/82b27c79a2f1c858dc62ecbd7fd605a5a9259101.png)
 
 # Known problems
 - Input might be missing if you are too fast
