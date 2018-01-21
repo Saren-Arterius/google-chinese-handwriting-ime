@@ -3,7 +3,7 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 
 # Why?
 - Google input tool works only inside Chrom{e, ium}
-- I promised to my friend that I will make this for him
+- My friend said that all Chinese handwriting IMEs in Linux suck, and I promised to my friend that I will make this for him
 
 # Installation
 1. Ensure `xdotool`, `python3` and latest `node` installed. Also ensure that you are using X instead of Wayland.
