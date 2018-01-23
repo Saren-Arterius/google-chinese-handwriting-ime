@@ -13,10 +13,26 @@ let thisWindowID;
 let lastWindowID;
 let windowWidth;
 
-const initUI = () => {
+const sleep = (ms) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, ms);
+  });
+};
+
+const initUI = async () => {
   $('body').css({overflow: 'hidden'});
   windowWidth = $('body').width();
-  ctr.Ea.b.gh(); // Toggle handwrite
+  while (true) {
+    try {
+      $('body > ul > li:nth-child(7)').click(); // Toggle handwrite
+      ctr.Ea.b.gh(); // Spawn it
+      break;
+    } catch (e) {
+      await sleep(UI_POLL_INTERVAL_MS); // Element may not be ready?
+    }
+  }
   ctr.Ea.b.C.A.C[2].C.view.Ui(); // Toggle full size
   $('.ita-hwt-grip').remove();
   $('.ita-hwt-close').remove();
@@ -34,7 +50,7 @@ const focusLastWindow = async () => {
 };
 
 const main = async () => {
-  initUI();
+  await initUI();
   thisWindowID = await getNumberOutput('xdotool search "Google Chinese Handwriting IME"');
   $('.ita-hwt-backspace').click(async () => {
     await focusLastWindow();
