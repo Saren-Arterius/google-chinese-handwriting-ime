@@ -1,10 +1,14 @@
 const electron = require('electron');
 // Module to control application life.
 // Module to create native browser window.
-const {BrowserWindow, app} = electron;
+const {
+  BrowserWindow,
+  app
+} = electron;
 
 const path = require('path');
 const url = require('url');
+
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -37,6 +41,23 @@ function createWindow () {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
+  });
+
+  const filter = {
+    urls: [
+      'https://translate.google.com/translate/releases/*/r/js/desktop_module_main.js'
+    ]
+  };
+
+  let redirected = false;
+  electron.session.defaultSession.webRequest.onBeforeRequest(filter, async (details, callback) => {
+    if (!redirected && details.url.indexOf('desktop_module_main.js') !== -1) {
+      redirected = true;
+      return callback({
+        redirectURL: 'https://translate.google.com/translate/releases/twsfe_w_20180220_RC00/r/js/desktop_module_main.js'
+      });
+    }
+    return callback({});
   });
 }
 

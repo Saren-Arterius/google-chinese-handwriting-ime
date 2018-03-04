@@ -1,6 +1,10 @@
 /* globals document, $, setInterval, ctr */
 
-const {exec, execFile, spawn} = require('mz/child_process');
+const {
+  exec,
+  execFile,
+  spawn
+} = require('mz/child_process');
 
 const UI_POLL_INTERVAL_MS = 50;
 const SHOULD_USE_CLIPBOARD = process.env.DESKTOP_SESSION.startsWith('gnome');
@@ -22,7 +26,9 @@ const sleep = (ms) => {
 };
 
 const initUI = async () => {
-  $('body').css({overflow: 'hidden'});
+  $('body').css({
+    overflow: 'hidden'
+  });
   windowWidth = $('body').width();
   while (true) {
     try {
@@ -92,4 +98,3 @@ document.addEventListener('DOMContentLoaded', (event) => {
   script.onload = script.onreadystatechange;
   document.body.appendChild(script);
 });
-
