@@ -28,6 +28,7 @@
         "asyncArrow": "always"
       }],
       "no-mixed-spaces-and-tabs": "error",
+      "no-restricted-syntax": "off",
       "no-restricted-globals": "off",
       "consistent-return": "error",
       "no-unused-vars": ["error", {"args": "none"}],
@@ -48,7 +49,7 @@
       "no-await-in-loop": "off",
       "node/shebang": "off",
       "object-curly-spacing": ["error", "never"],
-      "newline-per-chained-call": "off",
+      "newline-per-chained-call": "off"
   },
   "globals": {
     "describe": true,

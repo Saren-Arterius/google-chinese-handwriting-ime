@@ -10,15 +10,20 @@ const {
 
 // Options start
 
-const UI_POLL_INTERVAL_MS = 50;
+const UI_POLL_INTERVAL_MS = 100;
 const SHOULD_USE_CLIPBOARD = process.env.DESKTOP_SESSION.startsWith('gnome') || true;
 
 // Touchpad settings
 const TOUCHPAD_SUPPORT = true;
+const CANDIDATE_TIMEOUT_MS = 1000;
 const TOUCHPAD_EVENT_ID = null; // autodetect
 const TOUCHPAD_XINPUT_ID = null; // autodetect
 const TOUCHPAD_ESCAPE_KEYS = {
   9: true
+};
+const TOUCHPAD_CLEAR_TIMER_KEYS = {
+  9: true,
+  22: true
 };
 const TOUCHPAD_MAX_X = 1216;
 const TOUCHPAD_MAX_Y = 680;
@@ -30,8 +35,11 @@ const AREA_START_X = 4;
 const AREA_END_X = Math.floor((DRAW_AREA_WIDTH * DPI_SCALE) + (AREA_START_X / 2));
 const AREA_START_Y = 4;
 const AREA_END_Y = Math.floor(((DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) * DPI_SCALE) + (AREA_START_Y / 2));
-console.log(AREA_START_X, AREA_END_X, AREA_START_Y, AREA_END_Y);
+
 // Options end
+
+console.log('Area', AREA_START_X, AREA_END_X, AREA_START_Y, AREA_END_Y);
+
 
 let helper;
 if (SHOULD_USE_CLIPBOARD) {
@@ -41,18 +49,27 @@ let thisWindowID;
 let activeWindowID;
 let lastWindowID;
 let windowWidth;
-
-
+let currentTimeout;
 const States = {
   TOUCHPAD_INIT: 1,
   TOUCHPAD_READY: 2,
   TOUCHPAD_IDLE: 3,
   DRAWING_START_TOUCH: 4,
   DRAWING_MOVING: 5,
-  DRAWING_END_TOUCH: 6
+  DRAWING_END_TOUCH: 6,
+  SELECTING_START_TOUCH: 7,
+  SELECTING_MOVING: 8,
+  SELECTING_END_TOUCH: 9,
+  INPUTTING: 10
 };
 let state = States.TOUCHPAD_INIT;
 
+const focusLastWindow = async () => {
+  if (!lastWindowID) {
+    throw new Error('Last window is empty');
+  }
+  await exec(`xdotool windowfocus ${lastWindowID}`);
+};
 
 if (TOUCHPAD_SUPPORT) {
   const findTouchpadXInputID = async () => {
@@ -60,10 +77,8 @@ if (TOUCHPAD_SUPPORT) {
     try {
       let [out] = await execFile('xinput', ['list']);
       out.split('\n').some((line) => {
-        console.log(line);
         if (line.toLowerCase().includes('touchpad')) {
           line.split('\t').some((col) => {
-            console.log(col);
             if (col.startsWith('id=')) {
               [, touchpadXInputID] = col.split('=');
               return true;
@@ -97,11 +112,22 @@ if (TOUCHPAD_SUPPORT) {
     console.log(`touchpadXinputID: ${touchpadXInputID}`);
 
     let xinput = spawn('xinput', ['test-xi2', '--root']);
-    xinput.stdout.on('data', (data) => {
+    xinput.stdout.on('data', async (data) => {
       let line = data.toString();
-      if (line.startsWith('EVENT type 14 ') && TOUCHPAD_ESCAPE_KEYS[line.split('\n')[2].split(' ')[5]]) {
-        console.log('cancel shit');
-        state = States.TOUCHPAD_IDLE;
+      if (line.startsWith('EVENT type 14 ')) {
+        let key = line.split('\n')[2].split(' ')[5];
+        if (TOUCHPAD_ESCAPE_KEYS[key]) {
+          console.log('Escape');
+          state = States.TOUCHPAD_IDLE;
+          spawn('xinput', ['enable', touchpadXInputID]);
+          await focusLastWindow();
+        }
+        if (TOUCHPAD_CLEAR_TIMER_KEYS[key]) {
+          console.log('Clear timer');
+          if (currentTimeout) {
+            clearTimeout(currentTimeout);
+          }
+        }
       }
     });
 
@@ -112,10 +138,9 @@ if (TOUCHPAD_SUPPORT) {
     let absX = null;
     let absY = null;
     evtest.stdout.on('data', (data) => {
-      if (state === States.TOUCHPAD_INIT || state === States.TOUCHPAD_IDLE) {
+      if (state === States.TOUCHPAD_INIT || state === States.TOUCHPAD_IDLE || state === States.INPUTTING) {
         return;
       }
-      console.log('Data', state);
       let lines = data.toString();
       lines.split('\n').forEach((line) => {
         let cols = line.trim().split(' ');
@@ -129,32 +154,60 @@ if (TOUCHPAD_SUPPORT) {
         let cols = line.trim().split(' ');
         if (cols[8] === '(BTN_TOUCH),') {
           let touchOn = parseInt(cols[10], 10) === 1;
-          if (activeWindowID !== thisWindowID) {
+          if (activeWindowID !== thisWindowID && state !== States.TOUCHPAD_NEXT) {
             state = States.TOUCHPAD_IDLE;
+            execFileSync('xinput', ['enable', touchpadXInputID]);
+            if (currentTimeout) {
+              clearTimeout(currentTimeout);
+            }
           } else if (touchOn) {
-            if (state !== States.DRAWING_MOVING) {
+            let isOptionSelect = absY / TOUCHPAD_MAX_Y > DRAW_AREA_HEIGHT / (DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT);
+            let isMoving = state === States.SELECTING_MOVING || state === States.DRAWING_MOVING;
+            if (isOptionSelect) {
+              if (!isMoving) {
+                state = States.SELECTING_START_TOUCH;
+              }
+            } else if (!isMoving) {
               state = States.DRAWING_START_TOUCH;
             }
-          } else {
+          } else if (state === States.DRAWING_MOVING) {
             state = States.DRAWING_END_TOUCH;
+          } else if (state === States.SELECTING_MOVING) {
+            state = States.SELECTING_END_TOUCH;
           }
         }
       });
-      let relX = Math.floor((AREA_END_X - AREA_START_X) * (absX / TOUCHPAD_MAX_X));
-      let relY = Math.floor((AREA_END_Y - AREA_START_Y) * (absY / TOUCHPAD_MAX_Y));
-      if (state === States.DRAWING_START_TOUCH) {
-        console.log('Start touch');
-        execFileSync('xinput', ['disable', touchpadXInputID]);
-        execFileSync('xdotool', ['mousemove', '-w', thisWindowID, relX, relY, 'mousedown', '-w', thisWindowID, '1']);
-        state = States.DRAWING_MOVING;
-      } else if (state === States.DRAWING_MOVING) {
-        execFileSync('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
-      } else if (state === States.DRAWING_END_TOUCH) {
-        execFileSync('xdotool', ['mouseup', '-w', thisWindowID, '1']);
-        execFileSync('xinput', ['enable', touchpadXInputID]);
-        state = States.TOUCHPAD_READY;
+      let relX = AREA_START_X + Math.floor((AREA_END_X - AREA_START_X) * (absX / TOUCHPAD_MAX_X));
+      let relY = AREA_START_Y + Math.floor((AREA_END_Y - AREA_START_Y) * (absY / TOUCHPAD_MAX_Y));
+      if (currentTimeout) {
+        clearTimeout(currentTimeout);
       }
-      console.log(state);
+      if (state === States.SELECTING_START_TOUCH) {
+        state = States.SELECTING_MOVING;
+        spawn('xinput', ['disable', touchpadXInputID]);
+        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
+      } else if (state === States.DRAWING_START_TOUCH) {
+        state = States.DRAWING_MOVING;
+        spawn('xinput', ['disable', touchpadXInputID]);
+        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY, 'mousedown', '-w', thisWindowID, '1']);
+      } else if (state === States.SELECTING_MOVING) {
+        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
+      } else if (state === States.DRAWING_MOVING) {
+        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
+      } else if (state === States.DRAWING_END_TOUCH) {
+        state = States.TOUCHPAD_READY;
+        spawn('xdotool', ['mouseup', '-w', thisWindowID, '1']);
+        spawn('xinput', ['enable', touchpadXInputID]);
+        currentTimeout = setTimeout(() => {
+          let out = execFileSync('xdotool', ['getmouselocation']).toString();
+          let [x, y] = [out.split(' ')[0].split(':')[1], out.split(' ')[1].split(':')[1]];
+          spawn('xdotool', ['mousemove', '-w', thisWindowID, AREA_START_X, AREA_END_Y, 'click', '1', 'mousemove', x, y]);
+        }, CANDIDATE_TIMEOUT_MS);
+      } else if (state === States.SELECTING_END_TOUCH) {
+        state = States.TOUCHPAD_READY;
+        spawn('xdotool', ['click', '1']);
+        spawn('xinput', ['enable', touchpadXInputID]);
+      }
     });
 
     evtest.stderr.on('data', (data) => {
@@ -199,7 +252,7 @@ const initUI = async () => {
     overflow: 'hidden'
   });
   windowWidth = $('body').width();
-  while (true) {
+  while (windowWidth) {
     try {
       $('body > ul > li:nth-child(7)').click(); // Toggle handwrite
       ctr.Ea.b.gh(); // Spawn it
@@ -216,14 +269,6 @@ const initUI = async () => {
 const getNumberOutput = async (cmd) => {
   return parseInt((await exec(cmd))[0].trim(), 10);
 };
-
-const focusLastWindow = async () => {
-  if (!lastWindowID) {
-    throw new Error('Last window is empty');
-  }
-  await exec(`xdotool windowfocus ${lastWindowID}`);
-};
-
 const main = async () => {
   await initUI();
   thisWindowID = await getNumberOutput('xdotool search "Google Chinese Handwriting IME"');
@@ -238,22 +283,34 @@ const main = async () => {
   $('.ita-hwt-canvas').click(() => {
     if (state === States.TOUCHPAD_IDLE) {
       state = States.TOUCHPAD_READY;
-      console.log('idle -> ready');
     }
   });
   setInterval(async () => {
     activeWindowID = await getNumberOutput('xdotool getactivewindow');
     if (activeWindowID !== thisWindowID) {
       lastWindowID = activeWindowID;
+      if (currentTimeout) {
+        clearTimeout(currentTimeout);
+      }
     }
     let val = $('#source').val();
     if (val.length > 0) {
+      state = States.INPUTTING;
       $('#source').val('');
+      await sleep(UI_POLL_INTERVAL_MS / 2);
       await focusLastWindow();
+      await sleep(UI_POLL_INTERVAL_MS / 2);
       if (helper) {
+        console.log('helper', val);
         helper.stdin.write(`${val}\n`);
       } else {
+        console.log('xdotool', val);
         await execFile('xdotool', ['type', val]);
+      }
+      await sleep(UI_POLL_INTERVAL_MS / 2);
+      if (state === States.INPUTTING) {
+        await execFile('xdotool', ['windowfocus', thisWindowID]);
+        state = States.TOUCHPAD_READY;
       }
     }
     let newWidth = $('body').width();
@@ -266,7 +323,6 @@ const main = async () => {
 
 
   $(() => {
-    console.log('hadha');
     $('body').append(`
       <style>
         .ita-hwt-candidate {
