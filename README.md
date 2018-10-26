@@ -21,3 +21,6 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 # Known problems
 - Input might be missing if you are too fast
 - May not work on applications like gnome terminal
+- For KDE, need to set "window focus steal prevention" to "none"
+![steal prevention](https://drop.wtako.net/file/53c5896dc98bc6ed153c4e903d08ea5250f76233.png)
+
