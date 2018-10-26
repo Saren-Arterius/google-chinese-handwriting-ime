@@ -17,13 +17,13 @@ let mainWindow;
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 800,
+    width: 421,
     height: 302,
-    minWidth: 400,
+    minWidth: 421,
     minHeight: 302,
     maxHeight: 302
   });
-  mainWindow.setMenu(null);
+
   // and load the index.html of the app.
   mainWindow.loadURL(url.format({
     pathname: path.join(__dirname, 'index.html'),
@@ -32,9 +32,10 @@ function createWindow () {
   }));
 
   mainWindow.setAlwaysOnTop(true);
+  // Comment to dev
+  // mainWindow.setMenu(null);
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
-
+  // mainWindow.webContents.openDevTools();
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
