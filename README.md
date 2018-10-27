@@ -31,10 +31,10 @@ MacOS style laptop touchpad input support is recently added.
 # Screenshot
 ![Screenshot](https://drop.wtako.net/file/82b27c79a2f1c858dc62ecbd7fd605a5a9259101.png)
 
-# Touchpad Action
-High quality full version mp4: https://drop.wtako.net/file/848313e75126a23dca61193487a25f8c0fe924d6.mp4
-
-![Touchpad Action](https://drop.wtako.net/file/f1a6cd7c7ab44b928f53014e630f2b8d6d779605.gif)
+# See it in action
+- High quality full version mp4: https://drop.wtako.net/file/ddb9bb29707182454ba46ce9be11a8c84c4f870d.mp4
+- Handshot mp4: https://drop.wtako.net/file/6046c0e60369e3f3a1ebc40e5e4dbf752317b742.mp4
+![Touchpad Action](https://drop.wtako.net/file/9e05f084439c9db567788f3680e7e71b7a4ae34b.gif)
 
 # Known problems
 - Slow performance on GNOME, caused by xdotool
