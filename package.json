@@ -1,6 +1,6 @@
 {
   "name": "google-chinese-handwriting-ime",
-  "version": "1.0.2",
+  "version": "2.0.0",
   "description": "Written in Electron for Linux",
   "main": "main.js",
   "scripts": {
