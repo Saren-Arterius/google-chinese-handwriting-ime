@@ -12,8 +12,8 @@ const url = require('url');
 
 const WINDOW_HEIGHT = 302;
 const PADDING_PX = 4;
-const TOUCHPAD_LENGTH_X = CONFIG.touchpad_support.coords.touchpad_max.x - CONFIG.touchpad_support.coords.touchpad_min.x;
-const TOUCHPAD_LENGTH_Y = CONFIG.touchpad_support.coords.touchpad_max.y - CONFIG.touchpad_support.coords.touchpad_min.y;
+const TOUCHPAD_LENGTH_X = CONFIG.touchpad_support.touchpad_coords.max.x - CONFIG.touchpad_support.touchpad_coords.min.x;
+const TOUCHPAD_LENGTH_Y = CONFIG.touchpad_support.touchpad_coords.max.y - CONFIG.touchpad_support.touchpad_coords.min.y;
 const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (TOUCHPAD_LENGTH_X / TOUCHPAD_LENGTH_Y)) - PADDING_PX;
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -27,7 +27,11 @@ function createWindow () {
     height: WINDOW_HEIGHT,
     minWidth: WINDOW_WIDTH,
     minHeight: WINDOW_HEIGHT,
-    maxHeight: WINDOW_HEIGHT
+    maxHeight: WINDOW_HEIGHT,
+    webPreferences: {
+      experimentalFeatures: true,
+      blinkFeatures: 'CSSBackdropFilter'
+    }
   });
 
   // and load the index.html of the app.
@@ -39,7 +43,7 @@ function createWindow () {
 
   mainWindow.setAlwaysOnTop(true);
   // Comment to dev
-  mainWindow.setMenu(null);
+  // mainWindow.setMenu(null);
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
   // Emitted when the window is closed.

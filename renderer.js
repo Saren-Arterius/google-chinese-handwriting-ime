@@ -6,12 +6,13 @@ const {
   execFileSync,
   spawn
 } = require('mz/child_process');
+const {ipcRenderer} = require('electron');
 const {CONFIG} = require('./config.js');
 
 const PADDING_PX = 4;
 const WINDOW_HEIGHT = 302;
-const TOUCHPAD_LENGTH_X = CONFIG.touchpad_support.coords.touchpad_max.x - CONFIG.touchpad_support.coords.touchpad_min.x;
-const TOUCHPAD_LENGTH_Y = CONFIG.touchpad_support.coords.touchpad_max.y - CONFIG.touchpad_support.coords.touchpad_min.y;
+const TOUCHPAD_LENGTH_X = CONFIG.touchpad_support.touchpad_coords.max.x - CONFIG.touchpad_support.touchpad_coords.min.x;
+const TOUCHPAD_LENGTH_Y = CONFIG.touchpad_support.touchpad_coords.max.y - CONFIG.touchpad_support.touchpad_coords.min.y;
 
 const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (TOUCHPAD_LENGTH_X / TOUCHPAD_LENGTH_Y)) - PADDING_PX;
 
@@ -19,9 +20,9 @@ const DRAW_AREA_WIDTH = WINDOW_WIDTH;
 const DRAW_AREA_HEIGHT = 193.99;
 const SELECT_AREA_HEIGHT = 40.99;
 const AREA_START_X = PADDING_PX;
-const AREA_END_X = Math.floor((DRAW_AREA_WIDTH * CONFIG.touchpad_support.coords.desktop_dpi_scale)) - PADDING_PX;
+const AREA_END_X = Math.floor(DRAW_AREA_WIDTH) - PADDING_PX;
 const AREA_START_Y = PADDING_PX;
-const AREA_END_Y = Math.floor(((DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) * CONFIG.touchpad_support.coords.desktop_dpi_scale)) - PADDING_PX;
+const AREA_END_Y = Math.floor(DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) - PADDING_PX;
 
 console.log('Area', AREA_START_X, AREA_END_X, AREA_START_Y, AREA_END_Y);
 
@@ -34,7 +35,9 @@ let activeWindowID;
 let lastWindowID;
 let windowWidth;
 let currentTimeout;
-let firstHelperInput = true;
+let pointer;
+let hint;
+
 const States = {
   TOUCHPAD_INIT: 1,
   TOUCHPAD_READY: 2,
@@ -44,9 +47,9 @@ const States = {
   DRAWING_END_TOUCH: 6,
   SELECTING_START_TOUCH: 7,
   SELECTING_MOVING: 8,
-  SELECTING_END_TOUCH: 9,
-  INPUTTING: 10
+  SELECTING_END_TOUCH: 9
 };
+
 let state = States.TOUCHPAD_INIT;
 
 const focusLastWindow = async () => {
@@ -58,6 +61,7 @@ const focusLastWindow = async () => {
   return true;
 };
 
+
 if (CONFIG.touchpad_support.enabled) {
   const findTouchpadXInputID = async () => {
     let touchpadXInputID;
@@ -65,6 +69,7 @@ if (CONFIG.touchpad_support.enabled) {
       let [out] = await execFile('xinput', ['list']);
       out.split('\n').some((line) => {
         if (line.toLowerCase().includes('touchpad')) {
+          if (CONFIG.touchpad_support.device_blacklist.some(d => line.toLowerCase().includes(d.toLowerCase()))) return false;
           line.split('\t').some((col) => {
             if (col.startsWith('id=')) {
               [, touchpadXInputID] = col.split('=');
@@ -99,21 +104,37 @@ if (CONFIG.touchpad_support.enabled) {
     console.log(`touchpadXinputID: ${touchpadXInputID}`);
 
     let xinput = spawn('xinput', ['test-xi2', '--root']);
+    let unclutter;
     xinput.stdout.on('data', async (data) => {
       let line = data.toString();
       if (line.startsWith('EVENT type 14 ')) {
         let key = line.split('\n')[2].split(' ')[5];
         if (CONFIG.touchpad_support.key_mappings.escape[key]) {
           console.log('Escape');
+          execFileSync('xinput', ['enable', touchpadXInputID]);
+          if (unclutter) {
+            unclutter.kill();
+            unclutter = null;
+          }
+          if (pointer) {
+            pointer.style.opacity = 0;
+          }
+          if (hint) {
+            hint.style.opacity = 0;
+          }
           state = States.TOUCHPAD_IDLE;
-          spawn('xinput', ['enable', touchpadXInputID]);
-          await focusLastWindow();
         }
         if (CONFIG.touchpad_support.key_mappings.clear_timeout[key]) {
           console.log('Clear timer');
           if (currentTimeout) {
             clearTimeout(currentTimeout);
           }
+          ipcRenderer.sendToHost(JSON.stringify({
+            type: 'keyDown', keyCode: 'Backspace'
+          }));
+          ipcRenderer.sendToHost(JSON.stringify({
+            type: 'keyUp', keyCode: 'Backspace'
+          }));
         }
       }
     });
@@ -125,8 +146,11 @@ if (CONFIG.touchpad_support.enabled) {
     let absX = null;
     let absY = null;
     evtest.stdout.on('data', (data) => {
-      if (state === States.TOUCHPAD_INIT || state === States.TOUCHPAD_IDLE || state === States.INPUTTING) {
+      if (state === States.TOUCHPAD_INIT || state === States.TOUCHPAD_IDLE) {
         return;
+      }
+      if (currentTimeout) {
+        clearTimeout(currentTimeout);
       }
       let lines = data.toString();
       lines.split('\n').forEach((line) => {
@@ -141,14 +165,14 @@ if (CONFIG.touchpad_support.enabled) {
         let cols = line.trim().split(' ');
         if (cols[8] === '(BTN_TOUCH),') {
           let touchOn = parseInt(cols[10], 10) === 1;
-          if (activeWindowID !== thisWindowID && state !== States.TOUCHPAD_NEXT) {
-            state = States.TOUCHPAD_IDLE;
-            execFileSync('xinput', ['enable', touchpadXInputID]);
-            if (currentTimeout) {
-              clearTimeout(currentTimeout);
+          if (touchOn) {
+            if (pointer) {
+              pointer.style.opacity = 1;
             }
-          } else if (touchOn) {
-            let isOptionSelect = absY / CONFIG.touchpad_support.coords.touchpad_max.y > DRAW_AREA_HEIGHT / (DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT);
+            if (hint) {
+              hint.style.opacity = 0;
+            }
+            let isOptionSelect = absY / CONFIG.touchpad_support.touchpad_coords.max.y > DRAW_AREA_HEIGHT / (DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT);
             let isMoving = state === States.SELECTING_MOVING || state === States.DRAWING_MOVING;
             if (isOptionSelect) {
               if (!isMoving) {
@@ -158,49 +182,100 @@ if (CONFIG.touchpad_support.enabled) {
               state = States.DRAWING_START_TOUCH;
             }
           } else if (state === States.DRAWING_MOVING) {
+            if (pointer) {
+              pointer.style.opacity = 0;
+            }
             state = States.DRAWING_END_TOUCH;
           } else if (state === States.SELECTING_MOVING) {
+            if (pointer) {
+              pointer.style.opacity = 0;
+            }
             state = States.SELECTING_END_TOUCH;
           }
         }
       });
-      let relX = AREA_START_X + Math.floor((AREA_END_X - AREA_START_X) * ((absX - CONFIG.touchpad_support.coords.touchpad_min.x) / TOUCHPAD_LENGTH_X));
-      let relY = AREA_START_Y + Math.floor((AREA_END_Y - AREA_START_Y) * ((absY - CONFIG.touchpad_support.coords.touchpad_min.y) / TOUCHPAD_LENGTH_Y));
-      if (currentTimeout) {
-        clearTimeout(currentTimeout);
+      let relX = AREA_START_X + Math.floor((AREA_END_X - AREA_START_X) * ((absX - CONFIG.touchpad_support.touchpad_coords.min.x) / TOUCHPAD_LENGTH_X));
+      let relY = AREA_START_Y + Math.floor((AREA_END_Y - AREA_START_Y) * ((absY - CONFIG.touchpad_support.touchpad_coords.min.y) / TOUCHPAD_LENGTH_Y));
+      if (pointer) {
+        pointer.style.left = `${relX}px`;
+        pointer.style.top = `${relY}px`;
       }
+
       if (state === States.SELECTING_START_TOUCH) {
         state = States.SELECTING_MOVING;
-        spawn('xinput', ['disable', touchpadXInputID]);
-        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
+        execFileSync('xinput', ['disable', touchpadXInputID]);
+        if (lastWindowID) {
+          execFileSync('xdotool', ['windowfocus', lastWindowID]);
+        }
+        if (!unclutter) {
+          unclutter = spawn('unclutter', ['-idle', '0.01']);
+        }
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseMove', x: relX, y: relY
+        }));
+        // spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
       } else if (state === States.DRAWING_START_TOUCH) {
         state = States.DRAWING_MOVING;
-        spawn('xinput', ['disable', touchpadXInputID]);
-        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY, 'mousedown', '-w', thisWindowID, '1']);
+        execFileSync('xinput', ['disable', touchpadXInputID]);
+        if (lastWindowID) {
+          execFileSync('xdotool', ['windowfocus', lastWindowID]);
+        }
+        if (!unclutter) {
+          unclutter = spawn('unclutter', ['-idle', '0.01']);
+        }
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseDown', x: relX, y: relY, button: 'left', clickCount: 1
+        }));
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseMove', x: relX, y: relY
+        }));
+        // spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY, 'mousedown', '-w', thisWindowID, '1']);
       } else if (state === States.SELECTING_MOVING) {
-        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseMove', x: relX, y: relY
+        }));
+        // spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
       } else if (state === States.DRAWING_MOVING) {
-        spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseMove', x: relX, y: relY
+        }));
+        // spawn('xdotool', ['mousemove', '-w', thisWindowID, relX, relY]);
       } else if (state === States.DRAWING_END_TOUCH) {
         state = States.TOUCHPAD_READY;
-        spawn('xdotool', ['mouseup', '-w', thisWindowID, '1']);
-        spawn('xinput', ['enable', touchpadXInputID]);
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseUp', x: relX, y: relY
+        }));
+        // spawn('xdotool', ['mouseup', '-w', thisWindowID, '1']);
+        // spawn('xinput', ['enable', touchpadXInputID]);
         currentTimeout = setTimeout(() => {
-          let out = execFileSync('xdotool', ['getmouselocation']).toString();
-          let [x, y] = [out.split(' ')[0].split(':')[1], out.split(' ')[1].split(':')[1]];
-          spawn('xdotool', ['mousemove', '-w', thisWindowID, AREA_START_X, AREA_END_Y, 'click', '1', 'mousemove', x, y]);
+          // let out = execFileSync('xdotool', ['getmouselocation']).toString();
+          // let [x, y] = [out.split(' ')[0].split(':')[1], out.split(' ')[1].split(':')[1]];
+          ipcRenderer.sendToHost(JSON.stringify({
+            type: 'mouseDown', x: AREA_START_X, y: AREA_END_Y, button: 'left', clickCount: 1
+          }));
+          ipcRenderer.sendToHost(JSON.stringify({
+            type: 'mouseUp', x: AREA_START_X, y: AREA_END_Y, button: 'left', clickCount: 1
+          }));
+          // spawn('xdotool', ['mousemove', '-w', thisWindowID, AREA_START_X, AREA_END_Y, 'click', '1', 'mousemove', x, y]);
         }, CONFIG.touchpad_support.candidate_timeout_ms);
       } else if (state === States.SELECTING_END_TOUCH) {
         state = States.TOUCHPAD_READY;
-        spawn('xdotool', ['click', '1']);
-        spawn('xinput', ['enable', touchpadXInputID]);
+        // spawn('xdotool', ['click', '1']);
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseDown', x: relX, y: relY, button: 'left', clickCount: 1
+        }));
+        ipcRenderer.sendToHost(JSON.stringify({
+          type: 'mouseUp', x: relX, y: relY, button: 'left', clickCount: 1
+        }));
+        // spawn('xinput', ['enable', touchpadXInputID]);
       }
     });
 
     evtest.stderr.on('data', (data) => {
       let lines = data.toString();
       lines.split('\n').forEach((line) => {
-        if (touchpadEventID === null && line.toLowerCase().includes('touchpad')) {
+        if (touchpadEventID === null && line.toLowerCase().includes('touchpad')
+         && !CONFIG.touchpad_support.device_blacklist.some(d => line.toLowerCase().includes(d.toLowerCase()))) {
           [touchpadEventID] = line.replace('/dev/input/event', '').split(':');
         }
         if (line.includes('Select the device event number')) {
@@ -272,42 +347,38 @@ const main = async () => {
   $('.ita-hwt-canvas').click(() => {
     if (state === States.TOUCHPAD_IDLE) {
       state = States.TOUCHPAD_READY;
+      if (hint) {
+        hint.style.opacity = 0.5;
+      }
     }
   });
   setInterval(async () => {
     activeWindowID = await getNumberOutput('xdotool getactivewindow');
     if (activeWindowID !== thisWindowID) {
       lastWindowID = activeWindowID;
-      if (currentTimeout) {
-        clearTimeout(currentTimeout);
-      }
     }
     let val = $('#source').val();
     if (val.length > 0) {
-      state = States.INPUTTING;
       $('#source').val('');
-      let loop = helper && firstHelperInput ? 2 : 1;
-      firstHelperInput = false;
-      for (let i = 0; i < loop; i++) {
-        await sleep(CONFIG.ui_poll_interval_ms / 2);
+      if (!CONFIG.touchpad_support.enabled) {
         let suc = await focusLastWindow();
         if (!suc) {
-          state = States.TOUCHPAD_READY;
           return;
         }
         await sleep(CONFIG.ui_poll_interval_ms / 2);
-        if (helper) {
-          console.log('helper', val);
-          helper.stdin.write(`${val}\n`);
-        } else {
-          console.log('xdotool', val);
-          await execFile('xdotool', ['type', val]);
-        }
-        await sleep(CONFIG.ui_poll_interval_ms / 2);
       }
-      if (state === States.INPUTTING) {
+      if (helper) {
+        console.log('helper', val);
+        helper.stdin.write(`${val}\n`);
+      } else {
+        console.log('xdotool', val);
+        await execFile('xdotool', ['type', '--delay', 0, val]);
+      }
+      if (hint) {
+        hint.style.opacity = 0.5;
+      }
+      if (!CONFIG.touchpad_support.enabled) {
         await execFile('xdotool', ['windowfocus', thisWindowID]);
-        state = States.TOUCHPAD_READY;
       }
     }
     let newWidth = $('body').width();
@@ -330,11 +401,49 @@ const main = async () => {
         .ita-hwt-candidates {
           display: flex;
         }
+        #pointer {
+          transition: opacity 0.2s ease;
+          background-color: rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          border-radius: 1em;
+          transform: translate(-1em, -1em);
+          width: 2em;
+          height: 2em;
+          left: 0px;
+          top: 0px;
+          pointer-events: none;
+          z-index: 9999999999;
+          position: absolute;
+          backdrop-filter: blur(8px);
+        }
+        #hint {
+          transition: opacity 0.2s ease;
+          opacity: 0;
+          font-size: 4.5em;
+          z-index: 9999999999;
+          position: absolute;
+          pointer-events: none;
+          width: 100%;
+          height: 100%;
+          left: 0;
+          top: 0;
+          font-weight: 100;
+          text-align: center;
+          line-height: 1em;
+        }
       </style>
     `);
+    pointer = document.createElement('div');
+    pointer.id = 'pointer';
+    document.body.appendChild(pointer);
+    hint = document.createElement('h1');
+    hint.id = 'hint';
+    hint.appendChild(document.createTextNode('觸控輸入文字'));
+    hint.appendChild(document.createElement('br'));
+    hint.appendChild(document.createTextNode('按Esc鍵離開'));
+    document.body.appendChild(hint);
   });
 };
-
 
 document.addEventListener('DOMContentLoaded', (event) => {
   let script = document.createElement('script');

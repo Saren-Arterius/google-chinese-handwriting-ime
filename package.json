@@ -1,6 +1,6 @@
 {
   "name": "google-chinese-handwriting-ime",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Written in Electron for Linux",
   "main": "main.js",
   "scripts": {
@@ -17,7 +17,7 @@
   "author": "Saren Arterius",
   "license": "CC0-1.0",
   "dependencies": {
-    "electron": "^1.7.11",
+    "electron": "^3.0.6",
     "mz": "^2.7.0"
   },
   "devDependencies": {
