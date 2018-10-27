@@ -15,7 +15,7 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 4. `# pip3 install pyperclip` or equivalent package from your distro.
 
 # Config for touchpad
-1. Open `config.js`
+1. Open `config.js` with your text editor
 2. If `xorg-xdpyinfo` is not installed, change `touchpad_support.coords.desktop_dpi_scale` to your desktop DPI scale (normally 1 or 2)
 3. `$ evtest`, select your touchpad, touch and move your finger to right bottom, observe the maximum `ABS_X` and `ABS_Y` value between the flashing messages.
 4. Change `...touchpad_max.x` and `...touchpad_max.y` to the values you observed.
