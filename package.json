@@ -4,7 +4,7 @@
   "description": "Written in Electron for Linux",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "bash -c 'electron .; for i in {1..50}; do xinput enable ${i}; done'"
   },
   "repository": "https://github.com/Saren-Arterius/google-chinese-handwriting-ime",
   "keywords": [
