@@ -10,7 +10,7 @@ MacOS style laptop touchpad input support is recently added.
 
 # Installation
 1. Ensure `xdotool`, `python3`, `gconf` and latest `node` and `yarn` installed. 
-  - For touchpad support, `evdev` and `xinput` are also required. `xorg-xdpyinfo` is optional as to detect DPI scale.
+  - For touchpad support, `evdev` and `xinput` are also required.
   - Ensure that you are using X instead of Wayland.
 2. `$ git clone https://github.com/Saren-Arterius/google-chinese-handwriting-ime.git && cd google-chinese-handwriting-ime`
 3. `$ yarn`
@@ -18,11 +18,10 @@ MacOS style laptop touchpad input support is recently added.
 
 # Config for touchpad
 1. Open `config.js` with your text editor
-2. If `xorg-xdpyinfo` is not installed, change `touchpad_support.coords.desktop_dpi_scale` to your desktop DPI scale (normally 1 or 2)
-3. Run `$ evtest`, select your touchpad. Now touch your touchpad and move your finger to right bottom, observe the maximum `ABS_X` and `ABS_Y` value between the flashing messages. 
-  - Change `...touchpad_max.x` and `...touchpad_max.y` to the values you observed.
-  - Repeat for minimum `ABS_X` and `ABS_Y` and apply to `...touchpad_min.x` `...touchpad_min.y` for the left top corner.
-4. If the cursor went outside of the window when writing, or if there is too much padding, adjust `touchpad_max` `touchpad_min` and find the best values.
+2. Run `$ evtest`, select your touchpad. Now touch your touchpad and move your finger to right bottom, observe the maximum `ABS_X` and `ABS_Y` value between the flashing messages. 
+  - Change `touchpad_support.touchpad_coords.max.x` and `touchpad_support.touchpad_coords.max.y` to the values you observed.
+  - Repeat for minimum `ABS_X` and `ABS_Y` and apply to `touchpad_support.touchpad_coords.min.x` `touchpad_support.touchpad_coords.min.y` for the left top corner.
+3. If the cursor went outside of the drawing area when writing, or if there is too much padding, adjust the config above and find the best values.
 
 # Running
 1. `$ cd google-chinese-handwriting-ime`
@@ -37,10 +36,9 @@ High quality full version mp4: https://drop.wtako.net/file/848313e75126a23dca611
 ![Touchpad Action](https://drop.wtako.net/file/f1a6cd7c7ab44b928f53014e630f2b8d6d779605.gif)
 
 # Known problems
-- Input might be missing if you are too fast
-  - Or may be not 100% reliable at all anytime
-- May not work on applications like gnome terminal
-- The use of clipboard hack may make the text input unresponsive if you copied an image to clipboard
+- Slow performance on GNOME, caused by xdotool
+- `use_clipboard` could work better for GNOME, but it's not reliable and may not work on some applications
+  - The use of clipboard hack may make the text input unresponsive if you copied an image to clipboard
   - If the image inside clipboard is no longer needed, copy some text to clean the clipboard before text input
 - For KDE, need to set "Focus Stealing Prevention" to "none"
 ![steal prevention](https://drop.wtako.net/file/53c5896dc98bc6ed153c4e903d08ea5250f76233.png)
