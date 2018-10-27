@@ -37,7 +37,7 @@ function createWindow () {
 
   mainWindow.setAlwaysOnTop(true);
   // Comment to dev
-  // mainWindow.setMenu(null);
+  mainWindow.setMenu(null);
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();
   // Emitted when the window is closed.
