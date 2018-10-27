@@ -15,6 +15,7 @@ MacOS style laptop touchpad input support is recently added.
 2. `$ git clone https://github.com/Saren-Arterius/google-chinese-handwriting-ime.git && cd google-chinese-handwriting-ime`
 3. `$ yarn`
 4. `# pip3 install pyperclip` or equivalent package from your distro.
+5. `# usermod -a -G input $(whoami)`
 
 # Config for touchpad
 1. Open `config.js` with your text editor

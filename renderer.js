@@ -68,7 +68,7 @@ if (CONFIG.touchpad_support.enabled) {
     try {
       let [out] = await execFile('xinput', ['list']);
       out.split('\n').some((line) => {
-        if (line.toLowerCase().includes('touchpad')) {
+        if (line.toLowerCase().includes('touchpad') || line.toLowerCase().includes('finger')) {
           if (CONFIG.touchpad_support.device_blacklist.some(d => line.toLowerCase().includes(d.toLowerCase()))) return false;
           line.split('\t').some((col) => {
             if (col.startsWith('id=')) {
@@ -274,7 +274,7 @@ if (CONFIG.touchpad_support.enabled) {
     evtest.stderr.on('data', (data) => {
       let lines = data.toString();
       lines.split('\n').forEach((line) => {
-        if (touchpadEventID === null && line.toLowerCase().includes('touchpad')
+        if (touchpadEventID === null && (line.toLowerCase().includes('touchpad') || line.toLowerCase().includes('finger'))
          && !CONFIG.touchpad_support.device_blacklist.some(d => line.toLowerCase().includes(d.toLowerCase()))) {
           [touchpadEventID] = line.replace('/dev/input/event', '').split(':');
         }
