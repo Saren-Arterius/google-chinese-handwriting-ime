@@ -28,6 +28,8 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 ![Screenshot](https://drop.wtako.net/file/82b27c79a2f1c858dc62ecbd7fd605a5a9259101.png)
 
 # Touchpad Action
+High quality full version mp4: https://drop.wtako.net/file/848313e75126a23dca61193487a25f8c0fe924d6.mp4
+
 ![Touchpad Action](https://drop.wtako.net/file/f1a6cd7c7ab44b928f53014e630f2b8d6d779605.gif)
 
 # Known problems
