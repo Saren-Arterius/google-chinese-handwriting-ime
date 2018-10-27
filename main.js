@@ -12,7 +12,9 @@ const url = require('url');
 
 const WINDOW_HEIGHT = 302;
 const PADDING_PX = 4;
-const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (CONFIG.touchpad_support.coords.touchpad_max.x / CONFIG.touchpad_support.coords.touchpad_max.y)) - PADDING_PX;
+const TOUCHPAD_LENGTH_X = CONFIG.touchpad_support.coords.touchpad_max.x - CONFIG.touchpad_support.coords.touchpad_min.x;
+const TOUCHPAD_LENGTH_Y = CONFIG.touchpad_support.coords.touchpad_max.y - CONFIG.touchpad_support.coords.touchpad_min.y;
+const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (TOUCHPAD_LENGTH_X / TOUCHPAD_LENGTH_Y)) - PADDING_PX;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

@@ -29,11 +29,25 @@ exports.CONFIG = {
       }
     },
     coords: {
-      desktop_dpi_scale: dpi, // Normally you would want this as 1, hidpi 2
+      desktop_dpi_scale: dpi,
+      touchpad_min: {
+        x: 0,
+        y: 0
+      },
       touchpad_max: {
         x: 1216,
-        y: 680
+        y: 660
       }
+      /*
+      touchpad_min: {
+        x: 74,
+        y: 80
+      },
+      touchpad_max: {
+        x: 1860,
+        y: 1280
+      }
+      */
     }
   }
 };

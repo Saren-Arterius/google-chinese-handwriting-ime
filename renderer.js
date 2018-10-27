@@ -10,7 +10,10 @@ const {CONFIG} = require('./config.js');
 
 const PADDING_PX = 4;
 const WINDOW_HEIGHT = 302;
-const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (CONFIG.touchpad_support.coords.touchpad_max.x / CONFIG.touchpad_support.coords.touchpad_max.y)) - PADDING_PX;
+const TOUCHPAD_LENGTH_X = CONFIG.touchpad_support.coords.touchpad_max.x - CONFIG.touchpad_support.coords.touchpad_min.x;
+const TOUCHPAD_LENGTH_Y = CONFIG.touchpad_support.coords.touchpad_max.y - CONFIG.touchpad_support.coords.touchpad_min.y;
+
+const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (TOUCHPAD_LENGTH_X / TOUCHPAD_LENGTH_Y)) - PADDING_PX;
 
 const DRAW_AREA_WIDTH = WINDOW_WIDTH;
 const DRAW_AREA_HEIGHT = 193.99;
@@ -48,9 +51,11 @@ let state = States.TOUCHPAD_INIT;
 
 const focusLastWindow = async () => {
   if (!lastWindowID) {
-    throw new Error('Last window is empty');
+    console.error('Last window is empty');
+    return false;
   }
   await exec(`xdotool windowfocus ${lastWindowID}`);
+  return true;
 };
 
 if (CONFIG.touchpad_support.enabled) {
@@ -159,8 +164,8 @@ if (CONFIG.touchpad_support.enabled) {
           }
         }
       });
-      let relX = AREA_START_X + Math.floor((AREA_END_X - AREA_START_X) * (absX / CONFIG.touchpad_support.coords.touchpad_max.x));
-      let relY = AREA_START_Y + Math.floor((AREA_END_Y - AREA_START_Y) * (absY / CONFIG.touchpad_support.coords.touchpad_max.y));
+      let relX = AREA_START_X + Math.floor((AREA_END_X - AREA_START_X) * ((absX - CONFIG.touchpad_support.coords.touchpad_min.x) / TOUCHPAD_LENGTH_X));
+      let relY = AREA_START_Y + Math.floor((AREA_END_Y - AREA_START_Y) * ((absY - CONFIG.touchpad_support.coords.touchpad_min.y) / TOUCHPAD_LENGTH_Y));
       if (currentTimeout) {
         clearTimeout(currentTimeout);
       }
@@ -193,21 +198,23 @@ if (CONFIG.touchpad_support.enabled) {
     });
 
     evtest.stderr.on('data', (data) => {
-      let line = data.toString();
-      if (touchpadEventID === null && line.toLowerCase().includes('touchpad')) {
-        touchpadEventID = line.replace('/dev/input/event', '').split(':');
-      }
-      if (line.includes('Select the device event number')) {
-        if (touchpadEventID === null) {
-          alert(`Please manually edit renderer.js and fill TOUCHPAD_DEVICE_ID as /dev/input/event{number} below.\n\n${availableDevicesMsg}`);
-        } else {
-          console.log(`touchpadEventID: ${touchpadEventID}`);
-          evtest.stdin.write(`${touchpadEventID}\n`);
-          state = States.TOUCHPAD_IDLE;
+      let lines = data.toString();
+      lines.split('\n').forEach((line) => {
+        if (touchpadEventID === null && line.toLowerCase().includes('touchpad')) {
+          [touchpadEventID] = line.replace('/dev/input/event', '').split(':');
         }
-      } else if (state === States.TOUCHPAD_INIT) {
-        availableDevicesMsg += line;
-      }
+        if (line.includes('Select the device event number')) {
+          if (touchpadEventID === null) {
+            alert(`Please manually edit renderer.js and fill TOUCHPAD_DEVICE_ID as /dev/input/event{number} below.\n\n${availableDevicesMsg}`);
+          } else {
+            console.log(`touchpadEventID: ${touchpadEventID}`);
+            evtest.stdin.write(`${touchpadEventID}\n`);
+            state = States.TOUCHPAD_IDLE;
+          }
+        } else if (state === States.TOUCHPAD_INIT) {
+          availableDevicesMsg += line;
+        }
+      });
     });
 
     evtest.on('error', (err) => {
@@ -283,7 +290,11 @@ const main = async () => {
       firstHelperInput = false;
       for (let i = 0; i < loop; i++) {
         await sleep(CONFIG.ui_poll_interval_ms / 2);
-        await focusLastWindow();
+        let suc = await focusLastWindow();
+        if (!suc) {
+          state = States.TOUCHPAD_READY;
+          return;
+        }
         await sleep(CONFIG.ui_poll_interval_ms / 2);
         if (helper) {
           console.log('helper', val);

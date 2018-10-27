@@ -1,5 +1,7 @@
 # Google Chinese Handwriting IME
-A Chinese IME that works by exploiting Google Translate using Electron. This application aims to solve my friend's Chinese input problem when using Linux desktop. Therefore, this application is for Linux desktops only.
+A Chinese IME that works by exploiting Google Translate using Electron. This application aims to solve my friend's Chinese input problem when using Linux desktop. Therefore, this application is for Linux desktops only. 
+
+MacOS style laptop touchpad input support is recently added.
 
 # Why?
 - Google input tool works only inside Chrom{e, ium}
@@ -17,8 +19,10 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 # Config for touchpad
 1. Open `config.js` with your text editor
 2. If `xorg-xdpyinfo` is not installed, change `touchpad_support.coords.desktop_dpi_scale` to your desktop DPI scale (normally 1 or 2)
-3. `$ evtest`, select your touchpad, touch and move your finger to right bottom, observe the maximum `ABS_X` and `ABS_Y` value between the flashing messages.
-4. Change `...touchpad_max.x` and `...touchpad_max.y` to the values you observed.
+3. Run `$ evtest`, select your touchpad. Now touch your touchpad and move your finger to right bottom, observe the maximum `ABS_X` and `ABS_Y` value between the flashing messages. 
+  - Change `...touchpad_max.x` and `...touchpad_max.y` to the values you observed.
+  - Repeat for minimum `ABS_X` and `ABS_Y` and apply to `...touchpad_min.x` `...touchpad_min.y` for the left top corner.
+4. If the cursor went outside of the window when writing, or if there is too much padding, adjust `touchpad_max` `touchpad_min` and find the best values.
 
 # Running
 1. `$ cd google-chinese-handwriting-ime`
@@ -41,7 +45,10 @@ High quality full version mp4: https://drop.wtako.net/file/848313e75126a23dca611
 - For KDE, need to set "Focus Stealing Prevention" to "none"
 ![steal prevention](https://drop.wtako.net/file/53c5896dc98bc6ed153c4e903d08ea5250f76233.png)
 
-# Tested
+# Tested on
 - XPS 9360
-- Arch Linux
-- KDE 5.14
+  - Arch Linux
+  - KDE 5.14
+- Fujishu SH572
+  - Arch Linux
+  - KDE 5.14
