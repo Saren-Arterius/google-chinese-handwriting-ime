@@ -22,6 +22,7 @@ MacOS style laptop touchpad input support is recently added.
   - Change `touchpad_support.touchpad_coords.max.x` and `touchpad_support.touchpad_coords.max.y` to the values you observed.
   - Repeat for minimum `ABS_X` and `ABS_Y` and apply to `touchpad_support.touchpad_coords.min.x` `touchpad_support.touchpad_coords.min.y` for the left top corner.
 3. If the cursor went outside of the drawing area when writing, or if there is too much padding, adjust the config above and find the best values.
+4. If your touchpad is not autodetected, run `$ xinput list` and `$ evtest` to find corresponding device IDs for your touchpad. Optionally you may add a new entry into `device_blacklist` to avoid interference.
 
 # Running
 1. `$ cd google-chinese-handwriting-ime`

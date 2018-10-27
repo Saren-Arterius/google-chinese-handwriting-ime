@@ -438,7 +438,7 @@ const main = async () => {
     document.body.appendChild(pointer);
     hint = document.createElement('h1');
     hint.id = 'hint';
-    hint.appendChild(document.createTextNode('觸控輸入文字'));
+    hint.appendChild(document.createTextNode('請手寫文字'));
     hint.appendChild(document.createElement('br'));
     hint.appendChild(document.createTextNode('按Esc鍵離開'));
     document.body.appendChild(hint);
