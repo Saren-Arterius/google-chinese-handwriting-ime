@@ -28,7 +28,7 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 ![Screenshot](https://drop.wtako.net/file/82b27c79a2f1c858dc62ecbd7fd605a5a9259101.png)
 
 # Touchpad Action
-![Touchpad Action](https://drop.wtako.net/file/4936a7d59548f91f07c12ee7151485050e2bf411.gif)
+![Touchpad Action](https://drop.wtako.net/file/f1a6cd7c7ab44b928f53014e630f2b8d6d779605.gif)
 
 # Known problems
 - Input might be missing if you are too fast
