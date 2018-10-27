@@ -10,7 +10,7 @@ MacOS style laptop touchpad input support is recently added.
 
 # Installation
 1. Ensure `xdotool`, `python3`, `gconf` and latest `node` and `yarn` installed. 
-  - For touchpad support, `evdev` and `xinput` are also required.
+  - For touchpad support, `evtest` and `xorg-xinput` are also required.
   - Ensure that you are using X instead of Wayland.
 2. `$ git clone https://github.com/Saren-Arterius/google-chinese-handwriting-ime.git && cd google-chinese-handwriting-ime`
 3. `$ yarn`
