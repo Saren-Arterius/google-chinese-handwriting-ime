@@ -16,9 +16,9 @@ const DRAW_AREA_WIDTH = WINDOW_WIDTH;
 const DRAW_AREA_HEIGHT = 193.99;
 const SELECT_AREA_HEIGHT = 40.99;
 const AREA_START_X = PADDING_PX;
-const AREA_END_X = Math.floor((DRAW_AREA_WIDTH * CONFIG.touchpad_support.coords.desktop_dpi_scale));
+const AREA_END_X = Math.floor((DRAW_AREA_WIDTH * CONFIG.touchpad_support.coords.desktop_dpi_scale)) - PADDING_PX;
 const AREA_START_Y = PADDING_PX;
-const AREA_END_Y = Math.floor(((DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) * CONFIG.touchpad_support.coords.desktop_dpi_scale));
+const AREA_END_Y = Math.floor(((DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) * CONFIG.touchpad_support.coords.desktop_dpi_scale)) - PADDING_PX;
 
 console.log('Area', AREA_START_X, AREA_END_X, AREA_START_Y, AREA_END_Y);
 

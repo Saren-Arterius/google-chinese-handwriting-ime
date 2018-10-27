@@ -8,7 +8,7 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 
 # Installation
 1. Ensure `xdotool`, `python3` and latest `node` and `yarn` installed. 
-  - For touchpad support, `evdev` and `xinput` are also required. 
+  - For touchpad support, `evdev` and `xinput` are also required. `xorg-xdpyinfo` is optional as to detect DPI scale.
   - Ensure that you are using X instead of Wayland.
 2. `$ git clone https://github.com/Saren-Arterius/google-chinese-handwriting-ime.git && cd google-chinese-handwriting-ime`
 3. `$ yarn`
@@ -16,7 +16,7 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 
 # Config for touchpad
 1. Open `config.js`
-2. Change `touchpad_support.coords.desktop_dpi_scale` to your desktop DPI scale (normally 1 or 2)
+2. If `xorg-xdpyinfo` is not installed, change `touchpad_support.coords.desktop_dpi_scale` to your desktop DPI scale (normally 1 or 2)
 3. `$ evtest`, select your touchpad, touch and move your finger to right bottom, observe the maximum `ABS_X` and `ABS_Y` value between the flashing messages.
 4. Change `...touchpad_max.x` and `...touchpad_max.y` to the values you observed.
 
