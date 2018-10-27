@@ -17,8 +17,8 @@ A Chinese IME that works by exploiting Google Translate using Electron. This app
 # Config for touchpad
 1. Open `config.js`
 2. Change `touchpad_support.coords.desktop_dpi_scale` to your desktop DPI scale (normally 1 or 2)
-3. `$ evtest`, select your touchpad, touch and move your finger to right bottom, observe the maximum ABS_X and ABS_Y value between the flashing messages.
-4. Change `touchpad_support.coords.touchpad_max.?` to the values you observed.
+3. `$ evtest`, select your touchpad, touch and move your finger to right bottom, observe the maximum `ABS_X` and `ABS_Y` value between the flashing messages.
+4. Change `...touchpad_max.x` and `...touchpad_max.y` to the values you observed.
 
 # Running
 1. `$ cd google-chinese-handwriting-ime`
