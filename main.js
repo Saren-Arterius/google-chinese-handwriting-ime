@@ -5,10 +5,14 @@ const {
   BrowserWindow,
   app
 } = electron;
+const {CONFIG} = require('./config.js');
 
 const path = require('path');
 const url = require('url');
 
+const WINDOW_HEIGHT = 302;
+const PADDING_PX = 4;
+const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (CONFIG.touchpad_support.coords.touchpad_max.x / CONFIG.touchpad_support.coords.touchpad_max.y)) - PADDING_PX;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -17,11 +21,11 @@ let mainWindow;
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 421,
-    height: 302,
-    minWidth: 421,
-    minHeight: 302,
-    maxHeight: 302
+    width: WINDOW_WIDTH,
+    height: WINDOW_HEIGHT,
+    minWidth: WINDOW_WIDTH,
+    minHeight: WINDOW_HEIGHT,
+    maxHeight: WINDOW_HEIGHT
   });
 
   // and load the index.html of the app.

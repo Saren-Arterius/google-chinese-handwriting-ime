@@ -6,43 +6,24 @@ const {
   execFileSync,
   spawn
 } = require('mz/child_process');
+const {CONFIG} = require('./config.js');
 
+const PADDING_PX = 4;
+const WINDOW_HEIGHT = 302;
+const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (CONFIG.touchpad_support.coords.touchpad_max.x / CONFIG.touchpad_support.coords.touchpad_max.y)) - PADDING_PX;
 
-// Options start
-
-const UI_POLL_INTERVAL_MS = 100;
-const SHOULD_USE_CLIPBOARD = process.env.DESKTOP_SESSION.startsWith('gnome') || true;
-
-// Touchpad settings
-const TOUCHPAD_SUPPORT = true;
-const CANDIDATE_TIMEOUT_MS = 1000;
-const TOUCHPAD_EVENT_ID = null; // autodetect
-const TOUCHPAD_XINPUT_ID = null; // autodetect
-const TOUCHPAD_ESCAPE_KEYS = {
-  9: true
-};
-const TOUCHPAD_CLEAR_TIMER_KEYS = {
-  9: true,
-  22: true
-};
-const TOUCHPAD_MAX_X = 1216;
-const TOUCHPAD_MAX_Y = 680;
-const DPI_SCALE = 1.3;
-const DRAW_AREA_WIDTH = 417.99;
+const DRAW_AREA_WIDTH = WINDOW_WIDTH;
 const DRAW_AREA_HEIGHT = 193.99;
 const SELECT_AREA_HEIGHT = 40.99;
-const AREA_START_X = 4;
-const AREA_END_X = Math.floor((DRAW_AREA_WIDTH * DPI_SCALE) + (AREA_START_X / 2));
-const AREA_START_Y = 4;
-const AREA_END_Y = Math.floor(((DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) * DPI_SCALE) + (AREA_START_Y / 2));
-
-// Options end
+const AREA_START_X = PADDING_PX;
+const AREA_END_X = Math.floor((DRAW_AREA_WIDTH * CONFIG.touchpad_support.coords.desktop_dpi_scale));
+const AREA_START_Y = PADDING_PX;
+const AREA_END_Y = Math.floor(((DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) * CONFIG.touchpad_support.coords.desktop_dpi_scale));
 
 console.log('Area', AREA_START_X, AREA_END_X, AREA_START_Y, AREA_END_Y);
 
-
 let helper;
-if (SHOULD_USE_CLIPBOARD) {
+if (CONFIG.use_clipboard) {
   helper = spawn('python3', ['gnome-helper.py']);
 }
 let thisWindowID;
@@ -50,6 +31,7 @@ let activeWindowID;
 let lastWindowID;
 let windowWidth;
 let currentTimeout;
+let firstHelperInput = true;
 const States = {
   TOUCHPAD_INIT: 1,
   TOUCHPAD_READY: 2,
@@ -71,7 +53,7 @@ const focusLastWindow = async () => {
   await exec(`xdotool windowfocus ${lastWindowID}`);
 };
 
-if (TOUCHPAD_SUPPORT) {
+if (CONFIG.touchpad_support.enabled) {
   const findTouchpadXInputID = async () => {
     let touchpadXInputID;
     try {
@@ -100,7 +82,7 @@ if (TOUCHPAD_SUPPORT) {
   };
 
   (async () => {
-    let touchpadXInputID = TOUCHPAD_XINPUT_ID;
+    let touchpadXInputID = CONFIG.touchpad_support.preferred_device_id.xinput;
     if (touchpadXInputID === null) {
       try {
         touchpadXInputID = await findTouchpadXInputID();
@@ -116,13 +98,13 @@ if (TOUCHPAD_SUPPORT) {
       let line = data.toString();
       if (line.startsWith('EVENT type 14 ')) {
         let key = line.split('\n')[2].split(' ')[5];
-        if (TOUCHPAD_ESCAPE_KEYS[key]) {
+        if (CONFIG.touchpad_support.key_mappings.escape[key]) {
           console.log('Escape');
           state = States.TOUCHPAD_IDLE;
           spawn('xinput', ['enable', touchpadXInputID]);
           await focusLastWindow();
         }
-        if (TOUCHPAD_CLEAR_TIMER_KEYS[key]) {
+        if (CONFIG.touchpad_support.key_mappings.clear_timeout[key]) {
           console.log('Clear timer');
           if (currentTimeout) {
             clearTimeout(currentTimeout);
@@ -132,7 +114,7 @@ if (TOUCHPAD_SUPPORT) {
     });
 
     let evtest = spawn('evtest');
-    let touchpadEventID = TOUCHPAD_EVENT_ID;
+    let touchpadEventID = CONFIG.touchpad_support.preferred_device_id.dev_event;
     let availableDevicesMsg = '';
 
     let absX = null;
@@ -161,7 +143,7 @@ if (TOUCHPAD_SUPPORT) {
               clearTimeout(currentTimeout);
             }
           } else if (touchOn) {
-            let isOptionSelect = absY / TOUCHPAD_MAX_Y > DRAW_AREA_HEIGHT / (DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT);
+            let isOptionSelect = absY / CONFIG.touchpad_support.coords.touchpad_max.y > DRAW_AREA_HEIGHT / (DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT);
             let isMoving = state === States.SELECTING_MOVING || state === States.DRAWING_MOVING;
             if (isOptionSelect) {
               if (!isMoving) {
@@ -177,8 +159,8 @@ if (TOUCHPAD_SUPPORT) {
           }
         }
       });
-      let relX = AREA_START_X + Math.floor((AREA_END_X - AREA_START_X) * (absX / TOUCHPAD_MAX_X));
-      let relY = AREA_START_Y + Math.floor((AREA_END_Y - AREA_START_Y) * (absY / TOUCHPAD_MAX_Y));
+      let relX = AREA_START_X + Math.floor((AREA_END_X - AREA_START_X) * (absX / CONFIG.touchpad_support.coords.touchpad_max.x));
+      let relY = AREA_START_Y + Math.floor((AREA_END_Y - AREA_START_Y) * (absY / CONFIG.touchpad_support.coords.touchpad_max.y));
       if (currentTimeout) {
         clearTimeout(currentTimeout);
       }
@@ -202,7 +184,7 @@ if (TOUCHPAD_SUPPORT) {
           let out = execFileSync('xdotool', ['getmouselocation']).toString();
           let [x, y] = [out.split(' ')[0].split(':')[1], out.split(' ')[1].split(':')[1]];
           spawn('xdotool', ['mousemove', '-w', thisWindowID, AREA_START_X, AREA_END_Y, 'click', '1', 'mousemove', x, y]);
-        }, CANDIDATE_TIMEOUT_MS);
+        }, CONFIG.touchpad_support.candidate_timeout_ms);
       } else if (state === States.SELECTING_END_TOUCH) {
         state = States.TOUCHPAD_READY;
         spawn('xdotool', ['click', '1']);
@@ -258,7 +240,7 @@ const initUI = async () => {
       ctr.Ea.b.gh(); // Spawn it
       break;
     } catch (e) {
-      await sleep(UI_POLL_INTERVAL_MS); // Element may not be ready?
+      await sleep(CONFIG.ui_poll_interval_ms); // Element may not be ready?
     }
   }
   ctr.Ea.b.C.A.C[2].C.view.Ui(); // Toggle full size
@@ -297,17 +279,21 @@ const main = async () => {
     if (val.length > 0) {
       state = States.INPUTTING;
       $('#source').val('');
-      await sleep(UI_POLL_INTERVAL_MS / 2);
-      await focusLastWindow();
-      await sleep(UI_POLL_INTERVAL_MS / 2);
-      if (helper) {
-        console.log('helper', val);
-        helper.stdin.write(`${val}\n`);
-      } else {
-        console.log('xdotool', val);
-        await execFile('xdotool', ['type', val]);
+      let loop = helper && firstHelperInput ? 2 : 1;
+      firstHelperInput = false;
+      for (let i = 0; i < loop; i++) {
+        await sleep(CONFIG.ui_poll_interval_ms / 2);
+        await focusLastWindow();
+        await sleep(CONFIG.ui_poll_interval_ms / 2);
+        if (helper) {
+          console.log('helper', val);
+          helper.stdin.write(`${val}\n`);
+        } else {
+          console.log('xdotool', val);
+          await execFile('xdotool', ['type', val]);
+        }
+        await sleep(CONFIG.ui_poll_interval_ms / 2);
       }
-      await sleep(UI_POLL_INTERVAL_MS / 2);
       if (state === States.INPUTTING) {
         await execFile('xdotool', ['windowfocus', thisWindowID]);
         state = States.TOUCHPAD_READY;
@@ -319,7 +305,7 @@ const main = async () => {
       ctr.Ea.b.C.A.C[2].C.view.Ui();
       windowWidth = newWidth;
     }
-  }, UI_POLL_INTERVAL_MS);
+  }, CONFIG.ui_poll_interval_ms);
 
 
   $(() => {
