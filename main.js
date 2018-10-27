@@ -65,6 +65,7 @@ function createWindow () {
     if (!redirected && details.url.indexOf('desktop_module_main.js') !== -1) {
       redirected = true;
       return callback({
+        // https://drop.wtako.net/file/7419ad300b13731eb29ec06fe9b0b7a26f23a490.js
         redirectURL: 'https://translate.google.com/translate/releases/twsfe_w_20180220_RC00/r/js/desktop_module_main.js'
       });
     }
