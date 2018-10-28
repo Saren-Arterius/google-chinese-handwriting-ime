@@ -8,6 +8,6 @@ webview.addEventListener('dom-ready', () => {
 */
 
 webview.addEventListener('ipc-message', (event) => {
-  console.log(JSON.parse(event.channel));
-  webview.sendInputEvent(JSON.parse(event.channel));
+  let ie = JSON.parse(event.channel);
+  webview.sendInputEvent(ie);
 });

@@ -38,8 +38,10 @@ MacOS style laptop touchpad input support is recently added.
 ![Touchpad Action](https://drop.wtako.net/file/9e05f084439c9db567788f3680e7e71b7a4ae34b.gif)
 
 # Known problems
-- Slow performance on GNOME, caused by xdotool
-- `use_clipboard` could work better for GNOME, but it's not reliable and may not work on some applications
+- `xdotool type` reliability and performance
+  - Slow performance on GNOME
+  - Some text input maybe missing
+- `use_clipboard` could work better for GNOME and more reliable, but it may not work on some applications
   - The use of clipboard hack may make the text input unresponsive if you copied an image to clipboard
   - If the image inside clipboard is no longer needed, copy some text to clean the clipboard before text input
 - For KDE, need to set "Focus Stealing Prevention" to "none"

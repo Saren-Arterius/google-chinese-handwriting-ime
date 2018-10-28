@@ -1,6 +1,6 @@
 exports.CONFIG = {
   ui_poll_interval_ms: 100,
-  use_clipboard: false, // May improve performance for GNOME, but may lose input on some programs
+  use_clipboard: false, // May improve performance for GNOME, but may not work on some programs | try if some text is missing
   touchpad_support: {
     enabled: true,
     candidate_timeout_ms: 1000,
