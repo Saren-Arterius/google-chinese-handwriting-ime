@@ -310,16 +310,50 @@ const initUI = async () => {
     overflow: 'hidden'
   });
   windowWidth = $('body').width();
+  let method = 1;
+  try {
+    ctr.Ea.b.C.B.C[2].C.view.Ui;
+  } catch (e) {
+    console.error(e);
+    console.log('Using method 2');
+    method = 2;
+  }
   while (windowWidth) {
     try {
       $('body > ul > li:nth-child(7)').click(); // Toggle handwrite
-      ctr.Ea.b.gh(); // Spawn it
+      if (method === 1) {
+        ctr.Ea.b.gh();
+      } else if (method === 2) {
+        ctr.Ea.b.gh('zh-tw'); // Spawn it
+        await sleep(CONFIG.ui_poll_interval_ms);
+        if (!$('.goog-container.goog-container-vertical.ita-hwt-ime.ita-hwt-ltr.notranslate.ita-hwt-ime-st.ita-hwt-ime-init-opaque').is(':visible')) {
+          throw new Error();
+        }
+      }
       break;
     } catch (e) {
-      await sleep(CONFIG.ui_poll_interval_ms); // Element may not be ready?
+      // Element may not be ready?
+      console.error(e);
+      await sleep(CONFIG.ui_poll_interval_ms);
     }
   }
-  ctr.Ea.b.C.A.C[2].C.view.Ui(); // Toggle full size
+  if (method === 1) {
+    ctr.Ea.b.C.B.C[2].C.view.Ui(); // Toggle full size
+  } else if (method === 2) {
+    let {left, top} = $('.ita-hwt-grip').offset();
+    let [x, y] = [left + ($('.ita-hwt-grip').width() / 2), top + ($('.ita-hwt-grip').height() / 2)];
+    ipcRenderer.sendToHost(JSON.stringify({
+      type: 'mouseMove', x, y
+    }));
+    for (let i = 0; i < 2; i++) {
+      let evt = {
+        type: ['mouseDown', 'mouseUp'][i % 2], x, y, button: 'left', clickCount: 2
+      };
+      console.log(evt);
+      ipcRenderer.sendToHost(JSON.stringify(evt));
+    }
+    await sleep(CONFIG.ui_poll_interval_ms);
+  }
   $('.ita-hwt-grip').remove();
   $('.ita-hwt-close').remove();
 };
