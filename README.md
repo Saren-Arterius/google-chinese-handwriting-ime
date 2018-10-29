@@ -56,4 +56,4 @@ MacOS-style laptop touchpad input support is recently added.
   - KDE Plasma 5.14
 
 # Terms
-This application is licensed under [Creative Commons Zero v1.0 Universal](https://github.com/Saren-Arterius/google-chinese-handwriting-ime/blob/master/LICENSE.md) which is basically a "do whatever you want" license. Google Tanslate itself is covered by [Google Terms of Service and Provacy Policies](https://policies.google.com/).
+This application is licensed under [Creative Commons Zero v1.0 Universal](https://github.com/Saren-Arterius/google-chinese-handwriting-ime/blob/master/LICENSE.md) which is basically a "do whatever you want" license. Google Translate itself is covered by [Google Terms of Service and Provacy Policies](https://policies.google.com/).
