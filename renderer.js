@@ -9,16 +9,15 @@ const {
 const {ipcRenderer} = require('electron');
 const {CONFIG} = require('./config.js');
 
-const PADDING_PX = 4;
 const WINDOW_HEIGHT = 302;
+const PADDING_PX = 4;
 const TOUCHPAD_LENGTH_X = CONFIG.touchpad_support.touchpad_coords.max.x - CONFIG.touchpad_support.touchpad_coords.min.x;
 const TOUCHPAD_LENGTH_Y = CONFIG.touchpad_support.touchpad_coords.max.y - CONFIG.touchpad_support.touchpad_coords.min.y;
-
-const WINDOW_WIDTH = Math.round(WINDOW_HEIGHT * (TOUCHPAD_LENGTH_X / TOUCHPAD_LENGTH_Y)) - PADDING_PX;
-
-const DRAW_AREA_WIDTH = WINDOW_WIDTH;
 const DRAW_AREA_HEIGHT = 193.99;
 const SELECT_AREA_HEIGHT = 40.99;
+const WINDOW_WIDTH = Math.round((WINDOW_HEIGHT * (TOUCHPAD_LENGTH_X / TOUCHPAD_LENGTH_Y)) * ((DRAW_AREA_HEIGHT + SELECT_AREA_HEIGHT) / WINDOW_HEIGHT)) + PADDING_PX;
+
+const DRAW_AREA_WIDTH = WINDOW_WIDTH;
 const AREA_START_X = PADDING_PX;
 const AREA_END_X = Math.floor(DRAW_AREA_WIDTH) - PADDING_PX;
 const AREA_START_Y = PADDING_PX;
