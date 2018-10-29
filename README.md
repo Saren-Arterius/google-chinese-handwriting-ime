@@ -1,7 +1,7 @@
 # Google Chinese Handwriting IME
-A Chinese IME that works by exploiting Google Translate using Electron. This application aims to solve my friend's Chinese input problem when using Linux desktop. Therefore, this application is for Linux desktops only. 
+A Chinese IME that works by exploiting [Google Translate](https://translate.google.com/) using Electron. This application aims to solve my friend's Chinese input problem when using Linux desktop. Therefore, this application is for Linux desktops only. 
 
-MacOS style laptop touchpad input support is recently added.
+MacOS-style laptop touchpad input support is recently added.
 
 # Why?
 - Google input tool works only inside Chrom{e, ium}
@@ -44,13 +44,16 @@ MacOS style laptop touchpad input support is recently added.
 - `use_clipboard` could work better for GNOME and more reliable, but it may not work on some applications
   - The use of clipboard hack may make the text input unresponsive if you copied an image to clipboard
   - If the image inside clipboard is no longer needed, copy some text to clean the clipboard before text input
-- For KDE, need to set "Focus Stealing Prevention" to "none"
+- For KDE Plasma, need to set "Focus Stealing Prevention" to "none"
 ![steal prevention](https://drop.wtako.net/file/53c5896dc98bc6ed153c4e903d08ea5250f76233.png)
 
 # Tested on
 - XPS 9360
   - Arch Linux
-  - KDE 5.14
+  - KDE Plasma 5.14
 - Fujishu SH572
   - Arch Linux
-  - KDE 5.14
+  - KDE Plasma 5.14
+
+# Terms
+This application is licensed under [Creative Commons Zero v1.0 Universal](https://github.com/Saren-Arterius/google-chinese-handwriting-ime/blob/master/LICENSE.md) which is basically a "do whatever you want" license. Google Tanslate itself is covered by [Google Terms of Service and Provacy Policies](https://policies.google.com/).
