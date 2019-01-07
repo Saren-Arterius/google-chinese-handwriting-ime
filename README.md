@@ -50,7 +50,7 @@ MacOS-style laptop touchpad input support is recently added.
 # Tested on
 - XPS 9360
   - Arch Linux
-  - KDE Plasma 5.14
+  - KDE Plasma 5.14 / GNOME 3.30
 - Fujishu SH572
   - Arch Linux
   - KDE Plasma 5.14
