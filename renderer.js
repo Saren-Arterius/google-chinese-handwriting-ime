@@ -323,7 +323,7 @@ const initUI = async () => {
       if (method === 1) {
         ctr.Ea.b.gh();
       } else if (method === 2) {
-        ctr.Ea.b.gh('zh-tw'); // Spawn it
+        // ctr.Ea.b.gh('zh-tw'); // Spawn it
         await sleep(CONFIG.ui_poll_interval_ms);
         if (!$('.goog-container.goog-container-vertical.ita-hwt-ime.ita-hwt-ltr.notranslate.ita-hwt-ime-st.ita-hwt-ime-init-opaque').is(':visible')) {
           throw new Error();
@@ -453,7 +453,7 @@ const main = async () => {
           width: 100%;
           height: 100%;
           left: 0;
-          top: 0;
+          top: -20px;
           font-weight: 100;
           text-align: center;
           line-height: 1em;
