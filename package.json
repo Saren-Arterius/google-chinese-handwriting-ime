@@ -17,7 +17,7 @@
   "author": "Saren Arterius",
   "license": "CC0-1.0",
   "dependencies": {
-    "electron": "3.0.4",
+    "electron": "7.2.4",
     "mz": "^2.7.0"
   },
   "devDependencies": {
