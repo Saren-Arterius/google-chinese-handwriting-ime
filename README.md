@@ -38,6 +38,7 @@ MacOS-style laptop touchpad input support is recently added.
 ![Touchpad Action](https://drop.wtako.net/file/9e05f084439c9db567788f3680e7e71b7a4ae34b.gif)
 
 # Known problems
+- No wayland support!
 - `xdotool type` reliability and performance
   - Slow performance on GNOME
   - Some text input maybe missing
